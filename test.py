@@ -1,7 +1,7 @@
 import os
 import argparse
 import torch
-from data_loader import load_mnist
+from dataloaders.data_loader_HRCUS_FAKE import load_mnist
 # from models.cnn_gap import CNN
 # from models.cnn_grouped_gap import CNN
 # from models.cnn_pointwise_gap import CNN
