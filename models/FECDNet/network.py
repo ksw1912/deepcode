@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 import numpy as np
-from module.backbone import WPCNet
+from models.FECDNet.backbone import WPCNet
 from thop import profile
-from module.fusion import Block
+from models.FECDNet.fusion import Block
 from functools import partial
 
 

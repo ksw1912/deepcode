@@ -1,8 +1,13 @@
+# PyCharm
+.idea/
+
+# Python cache
+__pycache__/
+
 # model weights
 *.pt
 *.pth
 *.ckpt
-
 
 # datasets
 dataset/
