@@ -183,7 +183,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 best_model_path = os.path.join(save_dir, file_name)
                 torch.save(model.state_dict(), best_model_path)
                 print(f"  -> Best model saved to {best_model_path}")
-                best_ckpt_path = os.path.join(save_dir, f"epochs:{epochs} best_checkpoint.pth_train_val_seg_miou:{val_seg_miou:.4f}")
+                best_history_path = os.path.join(save_dir, f"epochs_{epochs} best_checkpoint.pth_train_val_seg_miou_{val_seg_miou:.4f}")
 
                 torch.save({
                     "epoch": epoch,
@@ -199,7 +199,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                     "val_seg_mf1": val_seg_mf1,
                     "val_seg_miou": val_seg_miou,
                     "val_seg_oa": val_seg_oa
-                }, best_ckpt_path)
+                }, best_history_path)
 
         # 2) last model 저장 (마지막 epoch에서만)
         if epoch == args.epochs:
