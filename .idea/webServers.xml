@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="ac58fe21-9484-48af-9136-f9a1d55bb96b" name="165.194.46.98">
+        <fileTransfer rootFolder="/userHome/userhome1/seowon" accessType="SFTP" host="165.194.34.98" port="1018" sshConfigId="a3d6c227-c010-4d70-a579-d7ea0f0eaf43" sshConfig="seowon@165.194.34.98:1018 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" isUseSudo="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

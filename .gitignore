@@ -1,0 +1,16 @@
+# model weights
+*.pt
+*.pth
+*.ckpt
+
+
+# datasets
+dataset/
+
+
+# results
+runs/
+test_output/
+logs/
+
+.vscode/
