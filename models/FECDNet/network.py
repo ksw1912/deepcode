@@ -402,8 +402,9 @@ class Basenet(nn.Module):
 
 if __name__=='__main__':
     net = Basenet().cuda()
-    out = net(torch.rand((2, 3, 256, 256)).cuda())[0]
-    print(out.shape)
+    out,a,b = net(torch.rand((2, 3, 256, 256)).cuda())
+    print("model_output",out.shape)
+    print("model_output_unique",out.unique())
 
     net = Basenet()  # 替换成你自己的模型类或实例化对象
     device = torch.device("cpu")

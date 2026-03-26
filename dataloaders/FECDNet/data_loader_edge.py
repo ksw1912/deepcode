@@ -19,6 +19,11 @@ val_loader = DataLoader(val_dataset, batch_size=8, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 """
 
+
+def get_idx(name):
+    stem = os.path.splitext(name)[0]
+    return int(stem.split("_")[-1])
+
 class Fake_Vaihingen(Dataset):
     def __init__(self, root_dir='./dataset/Fake-Vaihingen',
                  split="train"):  # train/test/val call 'split' ex split = test
@@ -27,9 +32,12 @@ class Fake_Vaihingen(Dataset):
         self.gt_dir = os.path.join(self.root_dir, self.split, "gt")  # Authentic img_dir
         self.gt_mask_path = os.path.join(self.root_dir, "gt_mask", "gt_mask.png")  # Authentic gt img
 
+
         self.lama_dir = os.path.join(self.root_dir, self.split, "lama")  # fake img1_dir
         self.repaint_dir = os.path.join(self.root_dir, self.split, "repaint")  # fake img2_dir
         self.inpainted_mask_dir = os.path.join(self.root_dir, self.split, "inpainted_mask")  # fake_gt img_dir
+        self.inpainted_mask_edge_dir = os.path.join(self.root_dir, self.split, "inpainted_mask_edge")  # fake_gt img_dir
+
 
         self.lama_files = sorted(os.listdir(self.lama_dir))
         self.repaint_files = sorted(os.listdir(self.repaint_dir))
@@ -41,29 +49,33 @@ class Fake_Vaihingen(Dataset):
 
         for f in self.lama_files:
             mask_path = os.path.join(self.inpainted_mask_dir, f)
+            mask_edge_path = os.path.join(self.inpainted_mask_edge_dir, f)
+
             if os.path.exists(mask_path):
                 self.fake_files.append({
                     "file_name": f,
                     "img_dir": self.lama_dir,
                     "mask_path": mask_path,
+                    "mask_edge_path": mask_edge_path,
                     "source": "lama",
                     "is_fake": 1
                 })
 
         for f in self.repaint_files:
             mask_path = os.path.join(self.inpainted_mask_dir, f)
+            mask_edge_path = os.path.join(self.inpainted_mask_edge_dir, f)
+
             if os.path.exists(mask_path):
                 self.fake_files.append({
                     "file_name": f,
                     "img_dir": self.repaint_dir,
                     "mask_path": mask_path,
+                    "mask_edge_path": mask_edge_path,
                     "source": "repaint",
                     "is_fake": 1
                 })
 
-        def get_idx(name):
-            stem = os.path.splitext(name)[0]
-            return int(stem.split("_")[-1])
+
 
         self.fake_files = sorted(self.fake_files, key=lambda x: get_idx(x["file_name"]))
 
@@ -72,15 +84,19 @@ class Fake_Vaihingen(Dataset):
             if os.path.isfile(os.path.join(self.gt_dir, f))
         ])
         for f in gt_files:
+
             self.real_files.append({
                 "file_name": f,
                 "img_dir": self.gt_dir,
                 "mask_path": self.gt_mask_path,
+                "mask_edge_path": mask_edge_path,
                 "source": "real",
                 "is_fake": 0
             })
 
         self.samples = self.fake_files + self.real_files
+
+
 
     def __len__(self):
         return len(self.samples)
@@ -99,6 +115,7 @@ class Fake_Vaihingen(Dataset):
 
         image = decode_image(img_path).float() / 255.0
         mask = decode_image(mask_path).float()
+        mask_edge = decode_image(sample["mask_edge_path"]).float()
 
         # If the label has 3 channels, only 1 channel is used.
         if mask.shape[0] > 1:
@@ -106,23 +123,30 @@ class Fake_Vaihingen(Dataset):
         else:
             mask = mask.squeeze(0)
 
+        if mask_edge.shape[0] > 1:
+            mask_edge = mask_edge[0]
+        else:
+            mask_edge = mask_edge.squeeze(0)
+
         # 0/1 Binarization
-        # mask = (mask > 0).float()
-        mask = (mask == 0).long()  # True forgery localization
+        # mask = (mask == 0).float()
+        mask = (mask == 0)
+        mask_edge = (mask_edge == 0)
 
         return {
             "image": image,
             "mask": mask,
+            "mask_edge": mask_edge,
             "is_fake": torch.tensor(sample["is_fake"], dtype=torch.long),  # fake=1, real=0
-            "file_name": sample["file_name"]
+            "file_name": sample["file_name"],
         }
 
 
 if __name__ == '__main__':
     from torch.utils.data import DataLoader, random_split
 
-    train_dataset = Fake_Vaihingen(root_dir='../dataset/Fake-Vaihingen', split="train")
-    test_dataset = Fake_Vaihingen('../dataset/Fake-Vaihingen',split="test")
+    train_dataset = Fake_Vaihingen(root_dir='../../dataset/Fake-Vaihingen', split="train")
+    test_dataset = Fake_Vaihingen('../../dataset/Fake-Vaihingen',split="test")
 
     train_size = int(0.8 * len(train_dataset))
     val_size = len(train_dataset) - train_size

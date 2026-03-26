@@ -41,5 +41,8 @@ class HistoryManager:
 def history_save(history, path = './checkpoint/history'):
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
+    if isinstance(history, HistoryManager):
+        history = history.get()
+
     with open(path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=4)

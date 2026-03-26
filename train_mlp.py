@@ -17,8 +17,6 @@ from utills.history_info import HistoryManager, history_save
 # %%
 def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: int = 10, device=None, save_dir: str = None):
     model.train()
-    total_train_samples = 0
-    total_val_samples = 0
     best_val_mIou = 0.0
     history = HistoryManager()
 
@@ -30,6 +28,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
         # ----- Training -----
         model.train()
         train_loss_sum = 0.0
+        total_train_samples = 0
         train_correct = 0
         train_tp, train_tn, train_fp, train_fn = 0.0, 0.0, 0.0, 0.0
         val_fn, val_tn, val_fp, val_tp = 0.0, 0.0, 0.0, 0.0
@@ -333,9 +332,9 @@ if __name__ == "__main__":
     # parser.add_argument("--imageSize",   type=int,  default=256,  help="input_size")
     parser.add_argument("--shuffle", type=bool, default=True, help="disable data shuffling")
     parser.add_argument("--device", type=str, default='cuda', help="device for training (e.g., 'cuda' or 'cpu')")
-    parser.add_argument("--output_name", type=str, default="fldcf_fakeL", help="base name for the output directory")
+    parser.add_argument("--output_name", type=str, default="fldcf_fakeV1", help="base name for the output directory")
     # dataset 변경시 -> dataset 경로도 추가로 지정 필요
-    parser.add_argument("--dataset", type=str, default='Fake-LoveDA',
+    parser.add_argument("--dataset", type=str, default='Fake-Vaihingen',
                         help="dataset setting(HRCUS_FAKE,Fake-LoveDA,Fake-Vaihingen,Splice-Vaihingen)")
     parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
     parser.add_argument("--save_dir", type=str, default="trained_output",

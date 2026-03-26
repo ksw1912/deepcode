@@ -3,11 +3,8 @@ import torch
 import os
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
-from dataloaders.data_loader_hrcus_fake import HRCUS_FAKE
-from dataloaders.data_loader_fakeV import Fake_Vaihingen
-from dataloaders.data_loader_fakeL import Fake_LoveDA
-from models.fldcf_dir.fldcf import FLDCF
-from loss.fldcf_loss.fldcf_loss import Loss_fake
+from dataloaders.FECDNet.data_loader_edge import  Fake_Vaihingen
+
 from train.seed_setting import set_seed
 from tqdm import tqdm
 from utills.metrics import compute_seg_metrics, comfusion_matrix
@@ -18,8 +15,6 @@ from loss.FECDNet_loss.loss import bce_iou_loss
 # %%
 def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: int = 10, device=None, save_dir: str = None):
     model.train()
-    total_train_samples = 0
-    total_val_samples = 0
     best_val_mIou = 0.0
     history = HistoryManager()
 
@@ -32,9 +27,10 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
         model.train()
         train_loss_sum = 0.0
         train_correct = 0
+        total_train_samples = 0
         train_tp, train_tn, train_fp, train_fn = 0.0, 0.0, 0.0, 0.0
         val_fn, val_tn, val_fp, val_tp = 0.0, 0.0, 0.0, 0.0
-        train_sg_mf1, train_seg_miou, train_seg_oa = 0.0, 0.0, 0.0
+        train_seg_mf1, train_seg_miou, train_seg_oa = 0.0, 0.0, 0.0
         num_batches = 0.0
 
         train_pbar = tqdm(train_loader, desc=f"[Train] Epoch {epoch}/{epochs}", leave=True)
@@ -44,16 +40,22 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
             data = batch['image'].float()
             gt_mask = batch['mask'].float().unsqueeze(1)
             cls_label = batch["is_fake"].float()
+            gt_mask_edge = batch["mask_edge"].float().unsqueeze(1)
 
             if device is not None:
                 data = data.to(device)
                 gt_mask = gt_mask.to(device)
                 cls_label = cls_label.to(device)
+                gt_mask_edge = gt_mask_edge.to(device)
 
             optimizer.zero_grad()
             output, fg_head, edge_head = model(data)
-            loss =  criterion(output,gt_mask)
+            mask_loss = criterion(output,gt_mask)
+            loss_fg = criterion(fg_head,gt_mask)
+            loss_edge = criterion(edge_head ,gt_mask_edge)
 
+
+            loss = mask_loss + loss_fg + loss_edge
             loss.backward()
             optimizer.step()
 
@@ -109,14 +111,21 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 data = batch['image'].float()
                 gt_mask = batch['mask'].float().unsqueeze(1)
                 cls_label = batch["is_fake"].float()
+                gt_mask_edge = batch["mask_edge"].float().unsqueeze(1)
 
                 if device is not None:
                     data = data.to(device)
                     gt_mask = gt_mask.to(device)
                     cls_label = cls_label.to(device)
+                    gt_mask_edge = gt_mask_edge.to(device)
 
                 output, fg_head, edge_head = model(data)
-                loss = criterion(output,gt_mask)
+                mask_loss = criterion(output, gt_mask)
+                loss_fg = criterion(fg_head, gt_mask)
+                loss_edge = criterion(edge_head, gt_mask_edge)  # ??
+
+
+                loss = mask_loss + loss_fg + loss_edge
 
                 val_loss_sum += loss.item()
 
@@ -301,7 +310,7 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     parser = argparse.ArgumentParser(description="remote-sensing")
-    parser.add_argument("--epochs", type=int, default=200, help="number of training epochs")
+    parser.add_argument("--epochs", type=int, default=100, help="number of training epochs")
     parser.add_argument("--batch_size", type=int, default=8, help="mini-batch size for training")
     parser.add_argument("--lr", type=float, default=1e-4, help="learning rate for optimizer")
     # parser.add_argument("--imageSize",   type=int,  default=256,  help="input_size")
