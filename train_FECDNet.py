@@ -125,7 +125,6 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 loss_fg = criterion(fg_head, gt_mask)
                 loss_edge = criterion(edge_head, gt_mask_edge)  # ??
 
-
                 loss = mask_loss + loss_fg + loss_edge
 
                 val_loss_sum += loss.item()
@@ -142,14 +141,12 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 val_tn += tn
                 val_fp += fp
                 val_fn += fn
-
                 val_batches += 1
 
                 total_val_samples += cls_label.size(0)
 
         val_seg_mf1, val_seg_miou, val_seg_oa = compute_seg_metrics(val_tp, val_tn, val_fp, val_fn)
         val_loss = val_loss_sum / len(val_loader)
-
 
         val_pbar.set_postfix(
             loss=f"{loss.item():.4f}",
@@ -173,7 +170,6 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 best_model_path = os.path.join(save_dir, file_name)
                 torch.save(model.state_dict(), best_model_path)
                 print(f"  -> Best model saved to {best_model_path}")
-
 
                 best_history_path = os.path.join(save_dir, f"best_checkpoint_epoch_{epoch}.pth")
 
