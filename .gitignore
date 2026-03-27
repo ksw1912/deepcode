@@ -16,6 +16,7 @@ dataset/
 # results
 runs/
 test_output/
+train_output/
 logs/
 
 .vscode/

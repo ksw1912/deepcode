@@ -14,7 +14,6 @@ def comfusion_matrix(pred, target):
     fp = ((pred == 1) & (target == 0)).sum().float()
     fn = ((pred == 0) & (target == 1)).sum().float()
 
-
     return tp, tn, fp, fn
 
 

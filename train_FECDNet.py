@@ -54,6 +54,8 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
             loss_fg = criterion(fg_head,gt_mask)
             loss_edge = criterion(edge_head ,gt_mask_edge)
 
+            output = torch.sigmoid(output)
+            pred_mask = torch.where(output >= 0.5, 1, 0)
 
             loss = mask_loss + loss_fg + loss_edge
             loss.backward()
@@ -61,8 +63,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
 
             train_loss_sum += loss.item()
 
-            # segmentation
-            pred_mask = output.argmax(dim=1)  # keep deep= False
+
             if gt_mask.dim() == 4 and gt_mask.size(1) == 1:
                 gt_mask = gt_mask.squeeze(1)
 
@@ -130,7 +131,8 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 val_loss_sum += loss.item()
 
                 # segmentation용
-                pred_mask = output.argmax(dim=1)  # [B, H, W]
+                output = torch.sigmoid(output)
+                pred_mask = torch.where(output >= 0.5, 1, 0)
 
                 if gt_mask.dim() == 4 and gt_mask.size(1) == 1:
                     gt_mask = gt_mask.squeeze(1)
@@ -171,7 +173,9 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 best_model_path = os.path.join(save_dir, file_name)
                 torch.save(model.state_dict(), best_model_path)
                 print(f"  -> Best model saved to {best_model_path}")
-                best_history_path = os.path.join(save_dir, f"epochs_{epoch} best_checkpoint.pth_train_val_seg_miou_{val_seg_miou:.4f}")
+
+
+                best_history_path = os.path.join(save_dir, f"best_checkpoint_epoch_{epoch}.pth")
 
                 torch.save({
                     "epoch": epoch,

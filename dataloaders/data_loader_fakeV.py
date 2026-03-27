@@ -19,7 +19,7 @@ val_loader = DataLoader(val_dataset, batch_size=8, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 """
 
-class Fake_Vaihingen(Dataset):
+class Fake_Vaihingen_LoveDA(Dataset):
     def __init__(self, root_dir='./dataset/Fake-Vaihingen',
                  split="train"):  # train/test/val call 'split' ex split = test
         self.root_dir = root_dir
@@ -121,8 +121,8 @@ class Fake_Vaihingen(Dataset):
 if __name__ == '__main__':
     from torch.utils.data import DataLoader, random_split
 
-    train_dataset = Fake_Vaihingen(root_dir='../dataset/Fake-Vaihingen', split="train")
-    test_dataset = Fake_Vaihingen('../dataset/Fake-Vaihingen',split="test")
+    train_dataset = Fake_Vaihingen_LoveDA(root_dir='../dataset/Fake-Vaihingen', split="train")
+    test_dataset = Fake_Vaihingen_LoveDA('../dataset/Fake-Vaihingen', split="test")
 
     train_size = int(0.8 * len(train_dataset))
     val_size = len(train_dataset) - train_size

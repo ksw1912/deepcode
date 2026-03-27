@@ -4,7 +4,7 @@ import os
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
 from dataloaders.data_loader_hrcus_fake import HRCUS_FAKE
-from dataloaders.data_loader_fakeV import Fake_Vaihingen
+from dataloaders.data_loader_fakeV import Fake_Vaihingen_LoveDA
 from dataloaders.data_loader_fakeL import Fake_LoveDA
 from models.fldcf_dir.fldcf import FLDCF
 from loss.fldcf_loss.fldcf_loss import Loss_fake
@@ -178,11 +178,15 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
         if best_val_mIou < val_seg_miou:
             best_val_mIou = val_seg_miou
             if save_dir:
+
+
                 file_name = f"epoch_{epoch}_trainF1_{train_seg_mf1:.4f}_trainmIOU_{train_seg_miou:.4f}.pth"
                 best_model_path = os.path.join(save_dir, file_name)
                 torch.save(model.state_dict(), best_model_path)
                 print(f"  -> Best model saved to {best_model_path}")
-                best_history_path = os.path.join(save_dir, f"epochs_{epochs} best_checkpoint.pth_train_val_seg_miou_{val_seg_miou:.4f}")
+
+
+                best_history_path = os.path.join(save_dir, f"best_checkpoint_epoch_{epoch}.pth")
 
                 torch.save({
                     "epoch": epoch,
@@ -262,8 +266,8 @@ def main(args):
         )
 
     elif args.dataset == "Fake-Vaihingen":
-        train_dataset_not_split = Fake_Vaihingen(root_dir='./dataset/Fake-Vaihingen', split="train")
-        test_dataset = Fake_Vaihingen('./dataset/Fake-Vaihingen', split="test")
+        train_dataset_not_split = Fake_Vaihingen_LoveDA(root_dir='./dataset/Fake-Vaihingen', split="train")
+        test_dataset = Fake_Vaihingen_LoveDA('./dataset/Fake-Vaihingen', split="test")
 
         train_size = int(0.8 * len(train_dataset_not_split))
         val_size = len(train_dataset_not_split) - train_size
@@ -326,7 +330,7 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     parser = argparse.ArgumentParser(description="remote-sensing")
-    parser.add_argument("--epochs", type=int, default=200, help="number of training epochs")
+    parser.add_argument("--epochs", type=int, default=100, help="number of training epochs")
     parser.add_argument("--batch_size", type=int, default=8, help="mini-batch size for training")
     parser.add_argument("--lr", type=float, default=1e-4, help="learning rate for optimizer")
     # parser.add_argument("--imageSize",   type=int,  default=256,  help="input_size")

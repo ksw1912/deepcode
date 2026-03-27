@@ -7,7 +7,7 @@ from torch.optim import SGD, Adagrad, RMSprop, Adam, AdamW
 from torch.nn import L1Loss
 from torch.utils.data import DataLoader, random_split
 from dataloaders.data_loader_hrcus_fake import HRCUS_FAKE
-from dataloaders.data_loader_fakeV import Fake_Vaihingen
+from dataloaders.data_loader_fakeV import Fake_Vaihingen_LoveDA
 from dataloaders.data_loader_fakeL import Fake_LoveDA
 from models.fldcf_dir.Restore import Restoretest
 from train.seed_setting import set_seed
@@ -118,8 +118,8 @@ def main(args):
         )
 
     elif args.dataset == "Fake-Vaihingen":
-        train_dataset_not_split = Fake_Vaihingen(root_dir='../dataset/Fake-Vaihingen', split="train")
-        test_dataset = Fake_Vaihingen('../dataset/Fake-Vaihingen', split="test")
+        train_dataset_not_split = Fake_Vaihingen_LoveDA(root_dir='../dataset/Fake-Vaihingen', split="train")
+        test_dataset = Fake_Vaihingen_LoveDA('../dataset/Fake-Vaihingen', split="test")
 
         train_size = int(0.8 * len(train_dataset_not_split))
         val_size = len(train_dataset_not_split) - train_size
