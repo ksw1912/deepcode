@@ -55,7 +55,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 label=gt_mask,
                 out_label=cls_label,
                 model='fldcf'
-            ).to(device)
+            )
             loss.backward()
             optimizer.step()
 

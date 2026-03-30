@@ -173,7 +173,7 @@ def save_segmentation_mismatch_samples(
 
 def build_test_dataset(args):
     if args.dataset == "HRCUS_FAKE":
-        return HRCUS_FAKE(root_dir="./dataset/HRCUS_fakev16/test", split="test")
+        return HRCUS_FAKE(root_dir="./dataset/HRCUS_fakev16", split="test")
     elif args.dataset == "Fake-LoveDA":
         return Fake_LoveDA(root_dir="../dataset/Fake-LoveDA", split="test")
     elif args.dataset == "Fake-Vaihingen":
