@@ -103,12 +103,10 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 data = batch['image'].float()
                 gt_mask = batch['mask'].float().unsqueeze(1)
                 cls_label = batch["is_fake"].float()
-                gt_mask_edge = batch["mask_edge"].float().unsqueeze(1)
 
                 if device is not None:
                     data = data.to(device)
                     gt_mask = gt_mask.to(device)
-                    gt_mask_edge = gt_mask_edge.to(device)
 
                 output = model(data)
                 loss = criterion(output['logits'], gt_mask)
