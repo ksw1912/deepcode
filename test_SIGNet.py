@@ -9,7 +9,9 @@ from torchvision.utils import save_image
 from dataloaders.data_loader_hrcus_fake import HRCUS_FAKE
 from dataloaders.data_loader_fakeV import Fake_Vaihingen_LoveDA
 from dataloaders.data_loader_fakeL import Fake_LoveDA
-from models.fldcf_dir.fldcf import FLDCF
+# from models.fldcf_dir.fldcf import FLDCF
+# from models.FECDNet.network import Basenet
+from models.SIGNet_dir.SIGNet import SIGNet
 from train.seed_setting import set_seed
 from utills.metrics import compute_seg_metrics, comfusion_matrix
 
@@ -40,8 +42,8 @@ def make_overlay(image, gt_mask, pred_mask, alpha=0.45):
     elif img.dim() == 3 and img.size(0) == 1:
         img = img.repeat(3, 1, 1)
 
-    gt = gt_mask.detach().cpu().squeeze().bool()     # [H,W]
-    pred = pred_mask.detach().cpu().squeeze().bool() # [H,W]
+    gt = gt_mask.detach().cpu().bool()     # [H,W]
+    pred = pred_mask.detach().cpu().bool() # [H,W]
 
     tp = (pred == 1) & (gt == 1)
     fp = (pred == 1) & (gt == 0)
@@ -98,7 +100,7 @@ def compute_sample_metrics(pred_mask, gt_mask, eps=1e-6):
     }
 
 
-def save_sample_metrics_csv(save_root, rows, filename="per_image_metrics.csv"):
+def save_sample_metrics_csv(save_root, rows, filename="_per_image_metrics.csv"):
     csv_path = os.path.join(save_root, filename)
     fieldnames = ["file_name", "tp", "tn", "fp", "fn", "iou", "f1"]
 
@@ -173,7 +175,7 @@ def save_segmentation_mismatch_samples(
 
 def build_test_dataset(args):
     if args.dataset == "HRCUS_FAKE":
-        return HRCUS_FAKE(root_dir="./dataset/HRCUS_fakev16/test", split="test")
+        return HRCUS_FAKE(root_dir="./dataset/HRCUS_fakev16", split="test")
     elif args.dataset == "Fake-LoveDA":
         return Fake_LoveDA(root_dir="../dataset/Fake-LoveDA", split="test")
     elif args.dataset == "Fake-Vaihingen":
@@ -207,10 +209,9 @@ def test(model, test_loader, device, save_root):
             gt_mask = gt_mask.long()
 
             output = model(data)
-            seg_pred, cls_pred = output
-
+            output = output["mask_prob"]
             # seg_pred: [B,C,H,W]
-            pred_mask = seg_pred.argmax(dim=1).long()  # [B,H,W]
+            pred_mask = torch.where(output >= 0.5, 1, 0)
 
             # per-image metrics
             for i in range(pred_mask.size(0)):
@@ -264,7 +265,7 @@ def main(args):
         shuffle=False
     )
 
-    model = FLDCF(args).to(device)
+    model = SIGNet().to(device)
 
     ckpt = torch.load(args.model_path, map_location=device)
     if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
@@ -290,14 +291,15 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="Fake-Vaihingen",
                         help="HRCUS_FAKE, Fake-LoveDA, Fake-Vaihingen")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output_name", type=str, default="fldcf_fakeV_test10")
+    parser.add_argument("--output_name", type=str, default="SIGNet_fakeV_test")
     parser.add_argument("--save_dir", type=str, default="test_output")
     parser.add_argument(
         "--model_path",
         type=str,
-        default=r"C:\Users\KimSeowon\Desktop\kimseowon_Research\CounterPart_Model\train\FLDCF\fldcf_fakeV1_b8_lr0.0001\epochs_100 best_checkpoint.pth_train_val_seg_miou_0.9085",
+        default=r"C:\Users\KimSeowon\Desktop\git\deepcode\trained_output\SIGNet_fakeV_b8_lr0.0001\epoch_94_trainF1_0.9751_trainmIOU_0.9519.pth",
         help="best_checkpoint.pth or model .pth path"
     )
+    parser.add_argument("--model", type=str, default="FECDNet")
 
     args = parser.parse_args()
     main(args)

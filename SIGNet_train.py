@@ -3,7 +3,7 @@ import torch
 import os
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
-from dataloaders.FECDNet.data_loader_edge import  Fake_Vaihingen
+from dataloaders.FECDNet.data_loader_edge import  Fake_Vaihingen, HRCUS_FAKE
 
 from train.seed_setting import set_seed
 from tqdm import tqdm

@@ -9,7 +9,8 @@ from torchvision.utils import save_image
 from dataloaders.data_loader_hrcus_fake import HRCUS_FAKE
 from dataloaders.data_loader_fakeV import Fake_Vaihingen_LoveDA
 from dataloaders.data_loader_fakeL import Fake_LoveDA
-from models.fldcf_dir.fldcf import FLDCF
+# from models.fldcf_dir.fldcf import FLDCF
+from models.FECDNet.network import Basenet
 from train.seed_setting import set_seed
 from utills.metrics import compute_seg_metrics, comfusion_matrix
 
@@ -206,7 +207,7 @@ def test(model, test_loader, device, save_root):
 
             gt_mask = gt_mask.long()
 
-            output = model(data)
+            output, fg_head, edge_head = model(data)
 
             # seg_pred: [B,C,H,W]
             pred_mask = torch.where(output >= 0.5, 1, 0)
@@ -263,7 +264,7 @@ def main(args):
         shuffle=False
     )
 
-    model = FLDCF(args).to(device)
+    model = Basenet().to(device)
 
     ckpt = torch.load(args.model_path, map_location=device)
     if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
@@ -289,12 +290,12 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="Fake-Vaihingen",
                         help="HRCUS_FAKE, Fake-LoveDA, Fake-Vaihingen")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output_name", type=str, default="FECDnet_fakeV_test")
+    parser.add_argument("--output_name", type=str, default="FECDnet_fakeV_test7")
     parser.add_argument("--save_dir", type=str, default="test_output")
     parser.add_argument(
         "--model_path",
         type=str,
-        default=r"C:\Users\KimSeowon\Desktop\kimseowon_Research\CounterPart_Model\train\fldcf_fakeV1_b8_lr0.0001\epoch_72_trainF1_0.9813_trainmIOU_0.9636.pth",
+        default=r"C:\Users\KimSeowon\Desktop\kimseowon_Research\CounterPart_Model\train\FECDNet\FECDNet_fakeV_b8_lr0_7\best_checkpoint_epoch_40.pth",
         help="best_checkpoint.pth or model .pth path"
     )
     parser.add_argument("--model", type=str, default="FECDNet")
