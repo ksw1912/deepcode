@@ -3,7 +3,7 @@ import torch
 import os
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
-from dataloaders.FECDNet.data_loader_edge import  Fake_Vaihingen, HRCUS_FAKE
+from dataloaders.data_loader_fakeV import  Fake_Vaihingen_LoveDA
 
 from train.seed_setting import set_seed
 from tqdm import tqdm
@@ -213,8 +213,8 @@ def main(args):
         # test_dataset = HRCUS_FAKE(root_dir="./dataset/HRCUS_fakev16/test", split="test")
 
     elif args.dataset == "Fake-LoveDA":
-        train_dataset_not_split = Fake_LoveDA(root_dir='./dataset/Fake-LoveDA', split="train")
-        test_dataset = Fake_LoveDA('./dataset/Fake-LoveDA', split="test")
+        train_dataset_not_split = Fake_Vaihingen_LoveDA(root_dir='./dataset/Fake-LoveDA', split="train")
+        test_dataset = Fake_Vaihingen_LoveDA('./dataset/Fake-LoveDA', split="test")
 
         train_size = int(0.8 * len(train_dataset_not_split))
         val_size = len(train_dataset_not_split) - train_size
@@ -229,8 +229,8 @@ def main(args):
         )
 
     elif args.dataset == "Fake-Vaihingen":
-        train_dataset_not_split = Fake_Vaihingen(root_dir='./dataset/Fake-Vaihingen', split="train")
-        test_dataset = Fake_Vaihingen('./dataset/Fake-Vaihingen', split="test")
+        train_dataset_not_split = Fake_Vaihingen_LoveDA(root_dir='./dataset/Fake-Vaihingen', split="train")
+        test_dataset = Fake_Vaihingen_LoveDA('./dataset/Fake-Vaihingen', split="test")
 
         train_size = int(0.8 * len(train_dataset_not_split))
         val_size = len(train_dataset_not_split) - train_size
