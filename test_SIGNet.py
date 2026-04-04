@@ -296,7 +296,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_path",
         type=str,
-        default=r"C:\Users\KimSeowon\Desktop\git\deepcode\trained_output\SIGNet_fakeV_b8_lr0.0001\epoch_94_trainF1_0.9751_trainmIOU_0.9519.pth",
+        default=r"C:\Users\KimSeowon\Desktop\best_checkpoint_epoch_5.pth",
         help="best_checkpoint.pth or model .pth path"
     )
     parser.add_argument("--model", type=str, default="FECDNet")
