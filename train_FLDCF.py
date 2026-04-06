@@ -125,6 +125,14 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                     cls_label = cls_label.to(device)
 
                 output = model(data)
+                seg_pred, cls_pred = output
+
+                print("=== BEFORE LOSS ===")
+                print("seg_pred:", seg_pred.shape)
+                print("gt_mask :", gt_mask.shape)
+                print("gt_mask dtype:", gt_mask.dtype)
+                print("gt_mask unique:", torch.unique(gt_mask))
+
                 loss = criterion.loss_calc(
                     out=output,
                     label=gt_mask,
@@ -133,7 +141,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 )
 
                 val_loss_sum += loss.item()
-                seg_pred, cls_pred = output
+
 
                 # segmentation용
                 pred_mask = seg_pred.argmax(dim=1)  # [B, H, W]
@@ -336,9 +344,9 @@ if __name__ == "__main__":
     # parser.add_argument("--imageSize",   type=int,  default=256,  help="input_size")
     parser.add_argument("--shuffle", type=bool, default=True, help="disable data shuffling")
     parser.add_argument("--device", type=str, default='cuda', help="device for training (e.g., 'cuda' or 'cpu')")
-    parser.add_argument("--output_name", type=str, default="fldcf_fakeV1", help="base name for the output directory")
+    parser.add_argument("--output_name", type=str, default="fldcf_fakeL1", help="base name for the output directory")
     # dataset 변경시 -> dataset 경로도 추가로 지정 필요
-    parser.add_argument("--dataset", type=str, default='Fake-Vaihingen',
+    parser.add_argument("--dataset", type=str, default='Fake-LoveDA',
                         help="dataset setting(HRCUS_FAKE,Fake-LoveDA,Fake-Vaihingen,Splice-Vaihingen)")
     parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
     parser.add_argument("--save_dir", type=str, default="trained_output",

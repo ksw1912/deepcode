@@ -291,15 +291,15 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="Fake-Vaihingen",
                         help="HRCUS_FAKE, Fake-LoveDA, Fake-Vaihingen")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output_name", type=str, default="SIGNet_fakeV_test")
+    parser.add_argument("--output_name", type=str, default="SIGNet_fakeV10_test")
     parser.add_argument("--save_dir", type=str, default="test_output")
     parser.add_argument(
         "--model_path",
         type=str,
-        default=r"C:\Users\KimSeowon\Desktop\best_checkpoint_epoch_5.pth",
+        default=r"C:\Users\KimSeowon\Desktop\kimseowon_Research\CounterPart_Model\train\SIGNet\SIGNet_fakeV12_b8_lr0.0001\best_checkpoint_epoch_95.pth",
         help="best_checkpoint.pth or model .pth path"
     )
-    parser.add_argument("--model", type=str, default="FECDNet")
+    parser.add_argument("--model", type=str, default="SIGNet")
 
     args = parser.parse_args()
     main(args)

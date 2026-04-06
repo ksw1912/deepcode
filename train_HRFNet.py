@@ -3,14 +3,17 @@ import torch
 import os
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
-from dataloaders.data_loader_fakeV import  Fake_Vaihingen_LoveDA
+from dataloaders.HRFNet.data_loader_fakeV import Fake_Vaihingen_LoveDA
 
 from train.seed_setting import set_seed
 from tqdm import tqdm
 from utills.metrics import compute_seg_metrics, comfusion_matrix
 from utills.history_info import HistoryManager, history_save
-from models.SIGNet_dir.SIGNet import SIGNet
+from models.HRFNet_dir.model import HRFNet
+import torch.nn as nn
 from loss.SIGNet_loss.loss import WeightedBCELoss
+
+import cv2
 
 # %%
 def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: int = 10, device=None, save_dir: str = None):
@@ -37,8 +40,8 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
 
         # for batch in train_loader:
         for batch in train_pbar:
-            data = batch['image'].float()
-            gt_mask = batch['mask'].float().unsqueeze(1)
+            data = batch['image']
+            gt_mask = batch['mask']
 
             if device is not None:
                 data = data.to(device)
@@ -46,7 +49,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
 
             optimizer.zero_grad()
             output= model(data)
-            loss = criterion(output['logits'],gt_mask)
+            loss = criterion(output,gt_mask)
 
             loss.backward()
             optimizer.step()
@@ -57,8 +60,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
             if gt_mask.dim() == 4 and gt_mask.size(1) == 1:
                 gt_mask = gt_mask.squeeze(1)
 
-            prob_mask = output["mask_prob"]  # sigmoid 된 확률
-            pred_mask = (prob_mask > 0.5).float()
+            pred_mask = torch.argmax(output, dim=1)
             tp, tn, fp, fn = comfusion_matrix(pred_mask, gt_mask)
             train_tp += tp
             train_tn += tn
@@ -100,22 +102,20 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
         with (torch.no_grad()):
             # for batch in train_loader:
             for batch in val_pbar:
-                data = batch['image'].float()
-                gt_mask = batch['mask'].float().unsqueeze(1)
-                cls_label = batch["is_fake"].float()
+                data = batch['image']
+                gt_mask = batch['mask'].squeeze(1)
 
                 if device is not None:
                     data = data.to(device)
                     gt_mask = gt_mask.to(device)
 
                 output = model(data)
-                loss = criterion(output['logits'], gt_mask)
+                loss = criterion(output, gt_mask)
                 val_loss_sum += loss.item()
-                prob_mask = output["mask_prob"]  # sigmoid 된 확률
-                pred_mask = (prob_mask > 0.5).float()
+                pred_mask = torch.argmax(output, dim=1).squeeze(1)
 
                 if gt_mask.dim() == 4 and gt_mask.size(1) == 1:
-                    gt_mask = gt_mask.squeeze(1)
+                    gt_mask = gt_mask
 
                 tp, tn, fp, fn = comfusion_matrix(pred_mask, gt_mask)
                 val_tp += tp
@@ -123,8 +123,6 @@ def train(model, train_loader, val_loader, criterion, optimizer, args, epochs: i
                 val_fp += fp
                 val_fn += fn
                 val_batches += 1
-
-                total_val_samples += cls_label.size(0)
 
         val_seg_mf1, val_seg_miou, val_seg_oa = compute_seg_metrics(val_tp, val_tn, val_fp, val_fn)
         val_loss = val_loss_sum / len(val_loader)
@@ -249,11 +247,11 @@ def main(args):
     # 2) 모델·손실·최적화기 설정
     device = torch.device(args.device) if args.device else None
 
-    model = SIGNet()
+    model = HRFNet()
 
     if device is not None:
         model.to(device)
-    criterion = WeightedBCELoss().cuda()
+    criterion = nn.CrossEntropyLoss().cuda()
 
     ########################################################################################
     # optimizer = SGD(model.parameters(), lr=args.lr)
@@ -297,9 +295,9 @@ if __name__ == "__main__":
     # parser.add_argument("--imageSize",   type=int,  default=256,  help="input_size")
     parser.add_argument("--shuffle", type=bool, default=True, help="disable data shuffling")
     parser.add_argument("--device", type=str, default='cuda', help="device for training (e.g., 'cuda' or 'cpu')")
-    parser.add_argument("--output_name", type=str, default="SIGNet_fakeV", help="base name for the output directory")
+    parser.add_argument("--output_name", type=str, default="HRFNet_fakeV", help="base name for the output directory")
     # dataset 변경시 -> dataset 경로도 추가로 지정 필요
-    parser.add_argument("--dataset", type=str, default='Fake-LoveDA',
+    parser.add_argument("--dataset", type=str, default='Fake-Vaihingen',
                         help="dataset setting(HRCUS_FAKE,Fake-LoveDA,Fake-Vaihingen,Splice-Vaihingen)")
     parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
     parser.add_argument("--save_dir", type=str, default="trained_output",

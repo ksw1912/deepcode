@@ -1,6 +1,7 @@
 import os
 from torch.utils.data import Dataset
 from torchvision.io import decode_image
+import torch.nn.functional as F
 import torch
 
 # train/test folder structure
@@ -19,26 +20,21 @@ val_loader = DataLoader(val_dataset, batch_size=8, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 """
 
-
-class Fake_LoveDA(Dataset):
-    def __init__(self, root_dir='../dataset/Fake-LoveDA',
+class Fake_Vaihingen_LoveDA(Dataset):
+    def __init__(self, root_dir='./dataset/Fake-Vaihingen',
                  split="train"):  # train/test/val call 'split' ex split = test
         self.root_dir = root_dir
         self.split = split
         self.gt_dir = os.path.join(self.root_dir, self.split, "gt")  # Authentic img_dir
-        self.gt_mask_path = os.path.join(self.root_dir, "gt_mask", "gt_mask.png")  # Aututhentic gt img
+        self.gt_mask_path = os.path.join(self.root_dir, "gt_mask", "gt_mask.png")  # Authentic gt img
 
         self.lama_dir = os.path.join(self.root_dir, self.split, "lama")  # fake img1_dir
         self.repaint_dir = os.path.join(self.root_dir, self.split, "repaint")  # fake img2_dir
         self.inpainted_mask_dir = os.path.join(self.root_dir, self.split, "inpainted_mask")  # fake_gt img_dir
 
-
-        #train/test folder의 image file name lists
         self.lama_files = sorted(os.listdir(self.lama_dir))
         self.repaint_files = sorted(os.listdir(self.repaint_dir))
         self.gt_files = sorted(os.listdir(self.gt_dir))
-
-        print("lama_files:", len(self.lama_files),"repaint_files",len(self.repaint_files),"gt_files",len(self.gt_files))
 
         self.fake_files = []
         self.real_files = []
@@ -103,7 +99,9 @@ class Fake_LoveDA(Dataset):
             mask_path = self.gt_mask_path  # real image는 all-zero mask
 
         image = decode_image(img_path).float() / 255.0
-        mask = decode_image(mask_path).float()
+        mask = decode_image(mask_path).float()  / 255.0
+        # [C,H,W] -> [1,C,H,W] -> [1,C,1000,1000]   F.interpolate:[N, C, H, W] demand
+        mask = F.interpolate(mask.unsqueeze(0), size=(1000,1000), mode='nearest').squeeze(0)
 
         # If the label has 3 channels, only 1 channel is used.
         if mask.shape[0] > 1:
@@ -113,7 +111,7 @@ class Fake_LoveDA(Dataset):
 
         # 0/1 Binarization
         # mask = (mask > 0).float()
-        mask = (mask > 0).long()
+        mask = (mask == 0).long()  # True forgery localization
 
         return {
             "image": image,
@@ -124,10 +122,10 @@ class Fake_LoveDA(Dataset):
 
 
 if __name__ == '__main__':
-    from torch.utils.data import DataLoader,  random_split
+    from torch.utils.data import DataLoader, random_split
 
-    train_dataset = Fake_LoveDA(root_dir='../dataset/Fake-LoveDA', split="train")
-    test_dataset = Fake_LoveDA('../dataset/Fake-LoveDA',split="test")
+    train_dataset = Fake_Vaihingen_LoveDA(root_dir='../../dataset/Fake-LoveDA', split="train")
+    test_dataset = Fake_Vaihingen_LoveDA('../../dataset/Fake-LoveDA', split="test")
 
     train_size = int(0.8 * len(train_dataset))
     val_size = len(train_dataset) - train_size
@@ -141,42 +139,15 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dataset_split, batch_size=8, shuffle=True)
     val_loader = DataLoader(val_dataset_split, batch_size=8, shuffle=False)
 
-
     print("train:", len(train_dataset_split))
     print("val:", len(val_dataset_split))
     print("test:", len(test_dataset))
-    for i, batch in enumerate(train_loader):
-        img = batch['image']
-        mask = batch['mask']
 
-        print(f"[Batch {i}]")
-        print("img :", img.shape)
-        print("mask:", mask.shape)
-
-        # 🔥 핵심 체크 1: spatial size 맞는지
-        if img.shape[-2:] != mask.shape[-2:]:
-            print("❌ SHAPE MISMATCH 발생!")
-            print("img size :", img.shape[-2:])
-            print("mask size:", mask.shape[-2:])
-
-            # 🔥 문제 샘플 추적 (가능하면 파일명 같이 출력)
-            if 'img_path' in batch:
-                print("img_path:", batch['img_path'])
-            if 'mask_path' in batch:
-                print("mask_path:", batch['mask_path'])
-
-            break
-
-        # 🔥 핵심 체크 2: label 값 이상 여부
-        unique_vals = torch.unique(mask)
-        print("unique:", unique_vals[:10])  # 너무 길면 일부만
-
-        # 🔥 핵심 체크 3: dtype 확인
-        print("mask dtype:", mask.dtype)
-
-        # 🔥 핵심 체크 4: NaN / 이상값
-        if torch.isnan(mask).any():
-            print("❌ NaN detected in mask!")
-            break
-
-    print("디버깅 종료")
+    #  디버깅 시작
+    # for i, batch in enumerate(train_loader):
+    #     img = batch['image']
+    #     mask = batch['mask']
+    #
+    #     print(f"[Batch {i}]")
+    #     print("img :", img.shape)
+    #     print("mask:", mask.shape)

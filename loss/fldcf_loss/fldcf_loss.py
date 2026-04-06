@@ -26,6 +26,16 @@ class Loss_fake():
             pred, real_or = out
             b, c, w, h = pred.size()
             label = Variable(label.long()).cuda()
+
+            print("=== loss_calc DEBUG ===")
+            print("pred.shape      :", pred.shape)
+            print("label.shape     :", label.shape)
+            print("real_or.shape   :", real_or.shape)
+            print("label.dtype     :", label.dtype)
+            print("label.unique    :", torch.unique(label))
+            print("out_label.shape :", out_label.shape)
+            print("out_label       :", out_label)
+
             corss = self.criterion(pred, label)
             if (model == 'fldcf'):
                 gan = self.fake(real_or, out_label)
